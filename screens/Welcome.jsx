@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Image, StyleSheet, Text, View, Pressable } from "react-native";
+import { useState } from 'react';
+import { Image, StyleSheet, Text, View, Pressable } from 'react-native';
 
 function Dots({ x }) {
   if (x == 1) {
@@ -8,14 +8,14 @@ function Dots({ x }) {
         <Image className="mr-2" source={require('../assets/dot1.png')}></Image>
         <Image source={require('../assets/dot2.png')}></Image>
       </View>
-    )
+    );
   } else {
     return (
       <View className="flex flex-row">
         <Image className="mr-2" source={require('../assets/dot2.png')}></Image>
         <Image source={require('../assets/dot1.png')}></Image>
       </View>
-    )
+    );
   }
 }
 
@@ -24,46 +24,66 @@ function Slides({ x }) {
     return (
       <View className="flex-1 items-center justify-center">
         <Image source={require('../assets/logo.png')}></Image>
-        <Text className="text-blue-500 text-center text-xl font-bold py-4">Autism App</Text>
-        <Text className="text-center mx-5" >Una aplicación de comunicación para ayudar a los estudiantes con autismo a comunicarse con amigos y profesores.</Text>
+        <Text className="text-sky-800 text-center text-xl font-bold py-4">
+          Autism App
+        </Text>
+        <Text className="text-center mx-5">
+          Una aplicación de comunicación para ayudar a los estudiantes con
+          autismo a comunicarse con amigos y profesores.
+        </Text>
       </View>
-    )
+    );
   } else {
     return (
-      <View className="flex-1 items-center justify-center"> 
-        <Image source={require('../assets/logo.png')}></Image>
-        <Text className="text-blue-500 text-center text-xl font-bold py-4">Slide 2</Text>
-        <Text className="text-center mx-5" >Una aplicación de comunicación para ayudar a los estudiantes con autismo a comunicarse con amigos y profesores.</Text>
+      <View className="flex-1 items-center justify-center">
+        <Image source={require('../assets/slide2.png')}></Image>
+        <Text className="text-sky-800 text-center text-xl font-bold py-4">
+          Todo muy facil
+        </Text>
+        <Text className="text-center mx-5">
+          En esta app la comunicación se hará a través de imágenes y figuras,
+          para que todo sea mucho más amigable
+        </Text>
       </View>
-    )
+    );
   }
 }
 
-export default function Welcome() {
-  const [n, setN] = useState(1)
+export default function Welcome({ navigation }) {
+  const [n, setN] = useState(1);
+  const nextSlide = () => {
+    if (n == 2) {
+      navigation.navigate('LoginBefore');
+    } else {
+      setN(n + 1);
+    }
+  };
   return (
     <View className="flex-1 items-center justify-center">
       <Slides x={n} />
       <View className="absolute bottom-10 flex justify-between flex-row items-center w-screen px-8">
-        <Pressable onPress={() => setN(1)} style={styles.button}>
+        <Pressable
+          onPress={() => setN(1)}
+          className="rounded-full bg-sky-900 p-3"
+        >
           <Text style={styles.buttonText}>Atras</Text>
         </Pressable>
         <Dots x={n} />
-        <Pressable onPress={() => setN(2)} style={styles.button}>
+        <Pressable onPress={nextSlide} className="rounded-full bg-sky-900 p-3">
           <Text style={styles.buttonText}>Siguiente</Text>
         </Pressable>
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: 'rgb(59, 103, 246)',
+    backgroundColor: '#0D5692',
     padding: 15,
-    borderRadius: 18,
+    borderRadius: '50%',
   },
   buttonText: {
-    color: "white"
-  }
-})
+    color: 'white',
+  },
+});
