@@ -1,15 +1,21 @@
 import { Camera, CameraType } from 'expo-camera';
-import { useState } from 'react';
-import { View, Pressable, Text, StyleSheet, Button, Image } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Pressable,
+  Text,
+  StyleSheet,
+  Button,
+  Image,
+  StatusBar,
+} from 'react-native';
 import * as FaceDetector from 'expo-face-detector';
-import { manipulateAsync, FlipType } from 'expo-image-manipulator';
+import { manipulateAsync, FlipType, SaveFormat } from 'expo-image-manipulator';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function Emotions({ navigation }) {
-  // const [xOr, setXOr] = useState(0);
-  // const [yOr, setYOr] = useState(0);
-  // const [xWid, setXWid] = useState(0);
-  // const [xHei, setXHei] = useState(0);
-  // const [bord, setBorder] = useState(0);
+
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [cameraRef, setCameraRef] = useState(null);
@@ -17,6 +23,17 @@ export default function Emotions({ navigation }) {
   const [scanText, setScanText] = useState('ESCANEAR');
   const [foto, setFoto] = useState(null);
   const [fotoUri, setFotoUri] = useState(null);
+  const [user, setUser] = useState({
+    id: 0,
+    name: '',
+    type: '',
+  });
+  const getUser = async () => {
+    setUser(JSON.parse(await AsyncStorage.getItem('user')) || user);
+  };
+  useFocusEffect(useCallback(() => {
+    getUser();
+  }, []));
 
   const trans = {
     angry: 'Enojado',
@@ -36,11 +53,27 @@ export default function Emotions({ navigation }) {
   if (!permission.granted) {
     // Camera permissions are not granted yet
     return (
-      <View style={styles.container}>
-        <Text style={{ textAlign: 'center' }}>
-          We need your permission to show the camera
+      <View className=" flex items-center justify-center h-[100%]">
+        <StatusBar
+          backgroundColor="#0d5692"
+          hidden={false}
+          translucent={true}
+        />
+        <Text className="text-center text-2xl font-semibold">
+          Necesitamos que nos otorgues permiso para acceder a la camara
         </Text>
-        <Button onPress={requestPermission} title="grant permission" />
+        <Pressable
+          className="bg-sky-700 p-3 rounded-lg mt-3"
+          onPress={requestPermission}
+        >
+          <Text className="text-white font-bold text-lg">Otorgar permisos</Text>
+        </Pressable>
+        <Pressable
+          className="bg-sky-100 p-3 rounded-lg mt-3"
+          onPress={() => navigation.goBack()}
+        >
+          <Text className="text-gray-700 font-bold text-lg">Volver</Text>
+        </Pressable>
       </View>
     );
   }
@@ -50,21 +83,6 @@ export default function Emotions({ navigation }) {
       current === CameraType.back ? CameraType.front : CameraType.back
     );
   }
-  // function handleFacesDetected(x) {
-  //   if (x) {
-  //     x.faces.forEach((el) => {
-  //       if (el.bounds) {
-  //         setXHei(el.bounds.size.height);
-  //         setXWid(el.bounds.size.width);
-  //         setXOr(el.bounds.origin.x);
-  //         setYOr(el.bounds.origin.y);
-  //         setBorder(2);
-  //       } else {
-  //         setBorder(0);
-  //       }
-  //     });
-  //   }
-  // }
 
   async function scanFace() {
     if (fotoUri) {
@@ -80,12 +98,14 @@ export default function Emotions({ navigation }) {
         base64: true,
         isImageMirror: true,
       });
-      const fliped = await manipulateAsync(img.uri, [
-        { flip: FlipType.Horizontal },
-      ]);
+      const fliped = await manipulateAsync(
+        img.uri,
+        [{ flip: FlipType.Horizontal }],
+        { format: SaveFormat.JPEG }
+      );
       setFotoUri(fliped.uri);
       const res = await fetch(
-        'https://81c1-201-108-4-15.ngrok-free.app/emotions',
+        'https://cf1f-201-108-3-145.ngrok-free.app/emotions',
         {
           method: 'POST',
           headers: {
@@ -98,12 +118,17 @@ export default function Emotions({ navigation }) {
         }
       );
       const data = await res.json();
-      if (data.emotion != 'No') {
-        setEmotion(
-          data.emotion.replace(/\b\w+\b/g, function (match) {
-            return trans[match] || match;
-          })
-        );
+      const emo = data.emotion
+      if (emo != 'No') {
+        const translated = emo.replace(/\b\w+\b/g, function (match) {
+          return trans[match] || match;
+        });
+        setEmotion(translated);
+        const emotions =
+          JSON.parse(await AsyncStorage.getItem('emotions')) || [];
+        const data = { userId: user.id, emocion: translated, uri: fliped.uri, date: Date.now() };
+        emotions.unshift(data);
+        await AsyncStorage.setItem('emotions', JSON.stringify(emotions))
       } else {
         setEmotion('No se detectó ninguna');
       }
@@ -133,6 +158,7 @@ export default function Emotions({ navigation }) {
 
   return (
     <View>
+      <StatusBar backgroundColor="#0d5692" hidden={false} translucent={true} />
       <View className="pt-8 flex- items-center">
         <View className="w-full">
           <Pressable
@@ -161,7 +187,6 @@ export default function Emotions({ navigation }) {
             ref={(ref) => setCameraRef(ref)}
             style={styles.camera}
             type={type}
-            // onFacesDetected={handleFacesDetected}
             faceDetectorSettings={{
               mode: FaceDetector.FaceDetectorMode.accurate,
               detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
@@ -179,10 +204,6 @@ export default function Emotions({ navigation }) {
         </Text>
       </View>
       <View className="flex flex-row justify-between items-center mt-16 mx-5">
-        {/* <Image
-          className="w-24 h-24 mt-20"
-          source={require('../assets/happy.png')}
-        ></Image> */}
         <Pressable
           className="py-3 px-1 rounded-full  active:bg-slate-200"
           onPress={toggleCameraType}
@@ -197,7 +218,7 @@ export default function Emotions({ navigation }) {
             {scanText}
           </Text>
         </Pressable>
-        <Pressable className="py-3 px-1 rounded-full  active:bg-slate-200">
+        <Pressable className="py-3 px-1 rounded-full  active:bg-slate-200" onPress={()=>navigation.navigate('Galery')}>
           <Text className="text-2xl text-black">Galeria</Text>
         </Pressable>
       </View>

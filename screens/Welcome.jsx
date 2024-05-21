@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View, Pressable } from 'react-native';
 
 function Dots({ x }) {
@@ -51,6 +53,22 @@ function Slides({ x }) {
 
 export default function Welcome({ navigation }) {
   const [n, setN] = useState(1);
+
+  const [user, setUser] = useState({
+    name: '',
+    type: '',
+  });
+  const getUser = async () => {
+    const data = JSON.parse(await AsyncStorage.getItem('user'))
+    setUser(data);
+    if (data) {
+      navigation.reset({index: 0, routes: [{name: 'Home'}]})
+    }
+  };
+  useFocusEffect(useCallback(() => {
+    getUser();
+  }));
+
   const nextSlide = () => {
     if (n == 2) {
       navigation.navigate('LoginBefore');

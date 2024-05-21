@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Button,
   ScrollView,
   Image,
   Pressable,
@@ -11,7 +12,7 @@ import {
   StyleSheet,
 } from 'react-native';
 
-export default function HomeScreen({ navigation }) {
+export default function Settings({ navigation }) {
   const [user, setUser] = useState({
     name: '',
     type: '',
@@ -19,9 +20,16 @@ export default function HomeScreen({ navigation }) {
   const getUser = async () => {
     setUser(JSON.parse(await AsyncStorage.getItem('user')) || user);
   };
-  useFocusEffect(useCallback(() => {
-    getUser();
-  }, []));
+  useFocusEffect(
+    useCallback(() => {
+      getUser();
+    }, [])
+  );
+
+  const logout = async () => {
+    await AsyncStorage.removeItem('user');
+    navigation.navigate('LoginBefore');
+  };
   return (
     <View className="h-[100%]">
       <StatusBar backgroundColor="#0d5692" hidden={false} translucent={true} />
@@ -47,38 +55,33 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.container}>
         <ScrollView className="mt-12">
           <Pressable
-            onPress={() => navigation.navigate('Emotions')}
-            className="bg-sky-900 mx-10 rounded-xl px-6 py-5 mt-24"
+            onPress={() => navigation.navigate('Galery')}
+            className="bg-sky-500 mx-10 rounded-xl px-6 py-5 mt-24"
           >
-            <Text className="text-white text-xl">Emociones</Text>
-            <Text className="text-white">
-              Juegos para poner en práctica los conocimientos
-            </Text>
-            <Image
-              className="mt-10 absolute right-0 bottom-2"
-              source={require('../assets/juegos.png')}
-            ></Image>
+            <Text className="text-white text-xl">Galería</Text>
+            <Text className="text-white">Galería de fichas de emociones</Text>
           </Pressable>
-          <View className="bg-sky-600 mx-10 rounded-xl px-6 py-5 my-20">
-            <Text className="text-white text-xl">Cronograma</Text>
-            <Text className="text-white">
-              Un calendario completo con todas tus tareas pendientes
+          <Pressable
+            onPress={logout}
+            className="bg-sky-700 mx-10 rounded-xl px-6 py-5 mt-8"
+          >
+            <Text
+              className="text-white text-xl"
+              onPress={() => navigation.navigate("Report")}
+            >
+              Generar reporte
             </Text>
-            <Image
-              className="mt-10 absolute right-0 bottom-2"
-              source={require('../assets/cronograma.png')}
-            ></Image>
-          </View>
-          <View className="bg-sky-300 mx-10 rounded-xl px-6 py-5 mb-40">
-            <Text className="text-white text-xl">Juegos</Text>
             <Text className="text-white">
-              Juegos para poner en práctica los conocimientos
+              Generar reporte de emociones del mes
             </Text>
-            <Image
-              className="mt-10 absolute right-0 bottom-2"
-              source={require('../assets/juegos2.png')}
-            ></Image>
-          </View>
+          </Pressable>
+          <Pressable
+            onPress={logout}
+            className="bg-sky-900 mx-10 rounded-xl px-6 py-5 mt-8"
+          >
+            <Text className="text-white text-xl">Logout</Text>
+            <Text className="text-white">Cerrar Sesión</Text>
+          </Pressable>
         </ScrollView>
       </View>
       <View className="bg-white w-screen px-8 py-5 absolute bottom-0">
